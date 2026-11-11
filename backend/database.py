@@ -52,3 +52,4 @@ def get_db() -> Generator[sqlite3.Connection, None, None]:
         yield conn
     finally:
         conn.close()
+

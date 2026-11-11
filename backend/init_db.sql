@@ -226,3 +226,4 @@ INSERT OR IGNORE INTO BomLine (menu_item_id, ingredient_id, qty_per_serving) VAL
 (7, 4, 0.5),    -- Đĩa chân gà nướng tiêu hao 0.5 kg chân gà
 (9, 2, 0.25),   -- Đĩa bò xào tiêu hao 0.25 kg bò
 (10, 5, 0.3);   -- Đĩa mực xào tiêu hao 0.3 kg mực
+

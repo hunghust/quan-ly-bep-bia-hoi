@@ -170,3 +170,4 @@ def get_notifications(
         }
         for r in rows
     ]
+
