@@ -81,13 +81,13 @@ git checkout -b feature/pb-04-notification
 
 #### 👉 Bước 4: Tiến hành viết code và chạy thử
 
-- **Nếu bạn làm Backend (PB-04...)**:
+- **Nếu bạn làm Backend (PB-04,...)**:
 
-  - Viết các đường dẫn API trong thư mục `backend/` (chủ yếu là file `backend/main.py`).
+  - Viết các đường dẫn API trong thư mục `backend/` (chủ yếu là viết trong file `backend/main.py` hoặc tách ra thành các file trong thư mục con nếu cần).
   - Khi cần đọc/ghi dữ liệu, sử dụng kết nối CSDL SQLite đã cấu hình sẵn trong `database.py`.
-- **Nếu bạn làm Frontend (PB-05...)**:
+- **Nếu bạn làm Frontend (PB-05,...)**:
 
-  - Bạn phụ trách Frontend sẽ tạo và viết các file .jsx chứa giao diện các thành phần màn hình trong thư mục frontend/src/components, rồi gọi hiển thị trong `App.jsx` để ghép các thành phần đó lại.
+  - Bạn phụ trách Frontend sẽ tạo và viết các file `.jsx` chứa giao diện các thành phần màn hình trong thư mục `frontend/src/components/`, rồi gọi hiển thị trong `App.jsx` để ghép các thành phần đó lại.
   - Trong React, giao diện không viết dồn vào một file mà được chia nhỏ thành các "khối Lego" gọi là **Components** (mỗi file `.jsx` là một thành phần màn hình độc lập).
 - Khởi động server chạy thử trực quan trên máy theo hướng dẫn ở **Mục 4**.
 
@@ -248,5 +248,6 @@ quan-ly-bep-bia-hoi/
     └── src/
         ├── App.jsx         # Giao diện tổng quan Sprint 1, kiểm tra kết nối API
         ├── index.css       # Tailwind CSS import
-        └── main.jsx        # Điểm gắn ứng dụng React
+        ├── main.jsx        # Điểm gắn ứng dụng React
+        └── components/     # Thư mục chứa các thành phần giao diện (PB-05)
 ```
