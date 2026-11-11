@@ -82,15 +82,13 @@ git checkout -b feature/pb-04-notification
 #### 👉 Bước 4: Tiến hành viết code và chạy thử
 
 - **Nếu bạn làm Backend (PB-04...)**:
+
   - Viết các đường dẫn API trong thư mục `backend/` (chủ yếu là file `backend/main.py`).
   - Khi cần đọc/ghi dữ liệu, sử dụng kết nối CSDL SQLite đã cấu hình sẵn trong `database.py`.
 - **Nếu bạn làm Frontend (PB-05...)**:
+
+  - Bạn phụ trách Frontend sẽ tạo và viết các file .jsx chứa giao diện các thành phần màn hình trong thư mục frontend/src/components, rồi gọi hiển thị trong `App.jsx` để ghép các thành phần đó lại.
   - Trong React, giao diện không viết dồn vào một file mà được chia nhỏ thành các "khối Lego" gọi là **Components** (mỗi file `.jsx` là một thành phần màn hình độc lập).
-  - Nhóm **đã tạo sẵn thư mục `frontend/src/components/`** kèm 3 khung màn hình mẫu cho 3 vai trò:
-    - `WaiterScreen.jsx`: Màn hình Phục vụ (chọn bàn, gọi món, chuông báo đồ xong).
-    - `HeadChefScreen.jsx`: Màn hình Bếp trưởng (duyệt đơn tổng, theo dõi tải 4 trạm).
-    - `LineCookScreen.jsx`: Màn hình Đầu bếp trạm (vé món hàng đợi FIFO, nút nấu/hoàn tất).
-  - Bạn phụ trách Frontend chỉ cần mở các file này ra trong VS Code để hoàn thiện tiếp giao diện, rồi gọi hiển thị trong `App.jsx`.
 - Khởi động server chạy thử trực quan trên máy theo hướng dẫn ở **Mục 4**.
 
 #### 👉 Bước 5: Lưu lại các thay đổi (Commit)
@@ -250,19 +248,5 @@ quan-ly-bep-bia-hoi/
     └── src/
         ├── App.jsx         # Giao diện tổng quan Sprint 1, kiểm tra kết nối API
         ├── index.css       # Tailwind CSS import
-        ├── main.jsx        # Điểm gắn ứng dụng React
-        └── components/     # Các khối giao diện phân vai trò (PB-05)
-            ├── WaiterScreen.jsx    # Khung màn hình Phục vụ (chọn bàn, gọi món)
-            ├── HeadChefScreen.jsx  # Khung màn hình Bếp trưởng (duyệt đơn, tải trạm)
-            └── LineCookScreen.jsx  # Khung màn hình Đầu bếp trạm (vé món FIFO)
+        └── main.jsx        # Điểm gắn ứng dụng React
 ```
-
----
-
-## 🎯 7. Kế Hoạch Sprint 1 (Tuần 1 - Tuần 2)
-
-- [X] **PB-01**: Khởi tạo khung dự án Backend/Frontend, quy ước Git, README hướng dẫn chạy local. *(Hoàn thành)*
-- [X] **PB-02**: Thiết kế cấu trúc CSDL SQLite với chế độ WAL cho phép đa màn hình đọc/ghi đồng thời. *(Hoàn thành)*
-- [X] **PB-03**: Nạp dữ liệu khởi tạo (Seed data) cho tài khoản 3 vai trò, trạm bếp, menu nhậu và định lượng BOM. *(Hoàn thành)*
-- [ ] **PB-04**: Cơ chế thông báo sự kiện theo vai trò và theo trạm (Polling định kỳ 2-3s). *(Đang triển khai)*
-- [ ] **PB-05**: Khung layout giao diện, thanh điều hướng và màn hình chính riêng cho Waiter, Bếp trưởng, Đầu bếp line. *(Đang triển khai)*
