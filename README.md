@@ -39,19 +39,30 @@ Hệ thống hỗ trợ nhà hàng bia hơi vận hành khu vực bếp theo th�
 
 ---
 
-### 3.2. Quy trình 6 bước từ A đến Z cho thành viên khi nhận việc
+### 3.2. Quy trình 7 bước từ A đến Z cho thành viên khi nhận việc
 
-#### 👉 Bước 1: Kéo code mới nhất từ nhánh `develop` về máy
-Trước khi bắt đầu làm bất kỳ việc gì, hãy chắc chắn máy bạn đang có code mới nhất:
+#### 👉 Bước 1: Tải (Clone) dự án về máy (Chỉ cần làm 1 lần đầu tiên)
+Mở terminal trên máy bạn (PowerShell, Command Prompt hoặc Git Bash) và chạy:
 ```bash
-# 1. Chuyển sang nhánh develop
-git checkout develop
+# 1. Tải toàn bộ mã nguồn về máy
+git clone https://github.com/hunghust/quan-ly-bep-bia-hoi.git
 
-# 2. Tải bản cập nhật mới nhất từ GitHub về
+# 2. Đi vào thư mục dự án
+cd quan-ly-bep-bia-hoi
+
+# 3. Chuyển sang nhánh làm việc chính develop
+git checkout develop
+```
+
+#### 👉 Bước 2: Cập nhật code mới nhất từ nhánh `develop` (Làm trước mỗi lần bắt đầu code)
+Trước khi bắt đầu làm bất kỳ việc gì, hãy chắc chắn máy bạn đang có code mới nhất mà nhóm đã gộp:
+```bash
+# Đang ở nhánh develop, kéo code mới nhất về
+git checkout develop
 git pull origin develop
 ```
 
-#### 👉 Bước 2: Tách một nhánh riêng cho phần việc của mình
+#### 👉 Bước 3: Tách một nhánh riêng cho phần việc của mình
 Giả sử bạn được giao làm **PB-04 (Hệ thống thông báo)**, hãy tạo nhánh riêng:
 ```bash
 git checkout -b feature/pb-04-notification
@@ -59,12 +70,12 @@ git checkout -b feature/pb-04-notification
 *(Nếu bạn làm PB-05 thì đặt tên là: `feature/pb-05-layout`)*  
 *💡 Ý nghĩa: Lệnh này tạo ra một bản sao độc lập để bạn tha hồ code, thử nghiệm trên máy mình mà không làm ảnh hưởng đến ai.*
 
-#### 👉 Bước 3: Tiến hành viết code và chạy thử
+#### 👉 Bước 4: Tiến hành viết code và chạy thử
 - Nếu bạn làm **Backend**: Viết API trong thư mục `backend/` (chủ yếu là `backend/main.py`).
 - Nếu bạn làm **Frontend**: Viết giao diện trong thư mục `frontend/src/` (tạo thêm components trong `frontend/src/`).
 - Mở server chạy thử tại máy cá nhân theo hướng dẫn ở **Mục 4**.
 
-#### 👉 Bước 4: Lưu lại các thay đổi (Commit)
+#### 👉 Bước 5: Lưu lại các thay đổi (Commit)
 Khi hoàn thành một phần việc hoặc cuối ngày làm việc:
 ```bash
 # 1. Xem lại những file mình đã sửa (hiện màu đỏ)
@@ -77,13 +88,13 @@ git add .
 git commit -m "PB-04: Xay dung API polling danh sach thong bao cho bep"
 ```
 
-#### 👉 Bước 5: Đẩy nhánh của mình lên GitHub
+#### 👉 Bước 6: Đẩy nhánh của mình lên GitHub
 ```bash
 git push -u origin feature/pb-04-notification
 ```
 *💡 Lưu ý: Lệnh này chỉ đẩy nhánh riêng của bạn lên GitHub, không hề ảnh hưởng đến nhánh chính của dự án.*
 
-#### 👉 Bước 6: Tạo Pull Request (Yêu cầu gộp code) trên GitHub
+#### 👉 Bước 7: Tạo Pull Request (Yêu cầu gộp code) trên GitHub
 1. Mở trình duyệt vào repo GitHub của nhóm: **[https://github.com/hunghust/quan-ly-bep-bia-hoi](https://github.com/hunghust/quan-ly-bep-bia-hoi)**.
 2. Ngay ở đầu trang, bạn sẽ thấy một **thanh màu vàng nổi bật** báo nhánh của bạn vừa được push, bấm vào nút:  
    👉 **`Compare & pull request`**
