@@ -58,17 +58,19 @@ cd quan-ly-bep-bia-hoi
 git checkout develop
 ```
 
-#### 👉 Bước 2: Cập nhật code mới nhất từ nhánh `develop` (Làm trước mỗi lần bắt đầu code)
+#### 👉 Bước 2: Cập nhật code mới nhất từ nhánh `develop` (Khi bắt đầu một đầu việc MỚI)
 
-Trước khi bắt đầu làm bất kỳ việc gì, hãy chắc chắn máy bạn đang có code mới nhất mà nhóm đã gộp:
+Khi bạn chuẩn bị nhận một đầu việc mới, hãy kéo code mới nhất từ nhánh `develop` về trước khi tách nhánh:
 
 ```bash
-# Đang ở nhánh develop, kéo code mới nhất về
+# 1. Chuyển sang nhánh develop
 git checkout develop
+
+# 2. Kéo code mới nhất mà nhóm đã gộp về máy
 git pull origin develop
 ```
 
-#### 👉 Bước 3: Tách một nhánh riêng cho phần việc của mình
+#### 👉 Bước 3: Tách một nhánh riêng cho phần việc mới của mình
 
 Giả sử bạn được giao làm **PB-04 (Hệ thống thông báo)**, hãy tạo nhánh riêng:
 
@@ -76,8 +78,16 @@ Giả sử bạn được giao làm **PB-04 (Hệ thống thông báo)**, hãy t
 git checkout -b feature/pb-04-notification
 ```
 
-*(Nếu bạn làm PB-05 thì đặt tên là: `feature/pb-05-layout`)*
-*💡 Ý nghĩa: Lệnh này tạo ra một bản sao độc lập để bạn tha hồ code, thử nghiệm trên máy mình mà không làm ảnh hưởng đến ai.*
+*(Nếu bạn làm PB-05 thì đặt tên là: `feature/pb-05-layout`)*  
+*💡 Ý nghĩa: Lệnh này tạo ra một bản sao độc lập từ `develop` để bạn tha hồ code trên máy mình mà không sợ ảnh hưởng đến ai.*
+
+> 💡 **LƯU Ý QUAN TRỌNG: Nếu bạn chỉ đang làm tiếp công việc dở dang của hôm trước**:  
+> Bạn **KHÔNG CẦN** làm Bước 2 và Bước 3 (không gõ lệnh `checkout -b` tạo nhánh mới nữa). Thay vào đó, bạn chỉ cần:  
+> 1. Quay lại nhánh cũ đang làm dở (nếu trước đó lỡ nhảy sang nhánh khác):  
+>    `git checkout feature/pb-04-notification` *(Lưu ý: KHÔNG có chữ `-b`)*  
+> 2. *(Tùy chọn)* Kéo code mới nhất từ `develop` gộp vào nhánh của bạn nếu nhóm vừa có cập nhật mới:  
+>    `git pull origin develop`  
+> 3. Cứ thế mở VS Code lên code tiếp cho đến khi hoàn thành!
 
 #### 👉 Bước 4: Tiến hành viết code và chạy thử
 
