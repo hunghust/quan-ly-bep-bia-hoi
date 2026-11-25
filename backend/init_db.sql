@@ -1,13 +1,14 @@
 -- ==============================================================================
 -- CƠ SỞ DỮ LIỆU: HỆ THỐNG QUẢN LÝ BẾP Ở NHÀ HÀNG BIA HƠI (SQLite)
 -- Đề tài: Quản trị dự án CNTT - Nhóm 13
--- Đáp ứng yêu cầu kỹ thuật PB-01, PB-02, PB-03 (Bật WAL Mode, Foreign Keys)
+-- Đồng bộ theo Tài liệu Phân tích Thiết kế Phiên bản 6 & Product_Backlog_1_1
+-- Đáp ứng PB-02, PB-03 (WAL Mode, Foreign Keys, CHECK constraints, UNIQUE, INDEX)
 -- ==============================================================================
 
 PRAGMA journal_mode = WAL;
 PRAGMA foreign_keys = ON;
 
--- 1. BẢNG TÀI KHOẢN VÀ PHÂN QUYỀN (User) - R10
+-- 1. BẢNG TÀI KHOẢN VÀ PHÂN QUYỀN (User) - R10, NFR-05
 CREATE TABLE IF NOT EXISTS "User" (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
@@ -15,7 +16,7 @@ CREATE TABLE IF NOT EXISTS "User" (
     full_name TEXT NOT NULL,
     role TEXT NOT NULL CHECK(role IN ('waiter', 'head_chef', 'line_cook')),
     station_id TEXT,
-    active INTEGER DEFAULT 1,
+    active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0, 1)),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (station_id) REFERENCES Station(id) ON DELETE SET NULL
 );
@@ -23,59 +24,66 @@ CREATE TABLE IF NOT EXISTS "User" (
 -- 2. BẢNG TRẠM BẾP (Station)
 CREATE TABLE IF NOT EXISTS Station (
     id TEXT PRIMARY KEY,            -- ST01, ST02, ST03, ST04
-    name TEXT NOT NULL,
+    name TEXT UNIQUE NOT NULL,
     description TEXT
 );
 
 -- 3. BẢNG MÓN ĂN / ĐỒ UỐNG (MenuItem)
 CREATE TABLE IF NOT EXISTS MenuItem (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
+    name TEXT UNIQUE NOT NULL,
     default_station_id TEXT NOT NULL,
     price INTEGER DEFAULT 0,
-    is_sold_out INTEGER DEFAULT 0,  -- 0: còn hàng, 1: hết hàng (R03)
-    active INTEGER DEFAULT 1,
+    is_sold_out INTEGER NOT NULL DEFAULT 0 CHECK(is_sold_out IN (0, 1)), -- 0: còn hàng, 1: hết hàng (R03)
+    active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0, 1)),
     FOREIGN KEY (default_station_id) REFERENCES Station(id)
 );
 
--- 4. BẢNG ĐƠN GỌI MÓN (Order) - R02
+-- 4. BẢNG ĐƠN GỌI MÓN (Order) - R02, NFR-05
 CREATE TABLE IF NOT EXISTS "Order" (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     order_code TEXT UNIQUE,
-    table_no TEXT NOT NULL,         -- Bàn 01, Bàn 02...
+    table_no TEXT NOT NULL,         -- Bàn 01, Bàn 02, Bàn VIP 1...
     waiter_id INTEGER,
-    status TEXT DEFAULT 'awaiting_confirm' CHECK(status IN ('awaiting_confirm', 'confirmed', 'completed', 'cancelled')),
+    status TEXT NOT NULL DEFAULT 'awaiting_confirm' CHECK(status IN ('awaiting_confirm', 'confirmed')),
     confirmed_snapshot TEXT,        -- Snapshot JSON khi bếp trưởng xác nhận (R02)
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (waiter_id) REFERENCES "User"(id)
 );
 
--- 5. BẢNG CHI TIẾT MÓN TRONG ĐƠN (OrderItem) - Q3, R01, R04, R07
+-- 5. BẢNG CHI TIẾT MÓN TRONG ĐƠN (OrderItem) - A3, R01, R04, R07, NFR-05
 CREATE TABLE IF NOT EXISTS OrderItem (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     order_id INTEGER NOT NULL,
     menu_item_id INTEGER NOT NULL,
-    quantity INTEGER NOT NULL DEFAULT 1,
+    quantity INTEGER NOT NULL DEFAULT 1 CHECK(quantity > 0),
     note TEXT,
-    station_id TEXT NOT NULL,
-    status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'cooking', 'ready', 'completed', 'cancelled')),
+    station_id TEXT,                -- Cho phép NULL khi còn awaiting_confirm; gán khi duyệt (4.1)
+    status TEXT NOT NULL DEFAULT 'awaiting_confirm' CHECK(
+        status IN ('awaiting_confirm', 'pending', 'cooking', 'ready', 'completed', 'cancelled')
+    ),
     started_at DATETIME,
     ready_at DATETIME,
     completed_at DATETIME,
-    overdue_alerted INTEGER DEFAULT 0, -- 1 nếu đã gửi cảnh báo > 10 phút (R07)
+    overdue_alerted INTEGER NOT NULL DEFAULT 0 CHECK(overdue_alerted IN (0, 1)), -- 1 nếu đã cảnh báo > 10p (R07)
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (order_id) REFERENCES "Order"(id) ON DELETE CASCADE,
     FOREIGN KEY (menu_item_id) REFERENCES MenuItem(id),
     FOREIGN KEY (station_id) REFERENCES Station(id)
 );
 
--- 6. BẢNG NHẬT KÝ CHUYỂN TRẠNG THÁI MÓN (ItemStatusLog)
+-- 6. BẢNG NHẬT KÝ CHUYỂN TRẠNG THÁI MÓN (ItemStatusLog) - NFR-05
 CREATE TABLE IF NOT EXISTS ItemStatusLog (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     order_item_id INTEGER NOT NULL,
-    from_status TEXT,
-    to_status TEXT NOT NULL,
+    from_status TEXT CHECK(
+        from_status IS NULL OR
+        from_status IN ('awaiting_confirm', 'pending', 'cooking', 'ready', 'completed', 'cancelled')
+    ),
+    to_status TEXT NOT NULL CHECK(
+        to_status IN ('awaiting_confirm', 'pending', 'cooking', 'ready', 'completed', 'cancelled')
+    ),
     by_user_id INTEGER,
     at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (order_item_id) REFERENCES OrderItem(id) ON DELETE CASCADE,
@@ -85,10 +93,10 @@ CREATE TABLE IF NOT EXISTS ItemStatusLog (
 -- 7. BẢNG THÔNG BÁO THỜI GIAN THỰC (Notification) - PB-04, R06, R07, R11
 CREATE TABLE IF NOT EXISTS Notification (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    target_role TEXT,              -- 'waiter', 'head_chef', 'line_cook'
+    target_role TEXT CHECK(target_role IS NULL OR target_role IN ('waiter', 'head_chef', 'line_cook')),
     target_user_id INTEGER,
     target_station_id TEXT,        -- 'ST01', 'ST02'...
-    type TEXT NOT NULL,            -- 'order_new', 'item_ready', 'item_overdue', 'stock_low', 'item_sold_out'
+    type TEXT NOT NULL,            -- order_new, order_updated, item_new, item_ready, item_overdue, item_cancel_rejected, low_stock, menu_changed
     payload TEXT NOT NULL,         -- Nội dung / JSON chi tiết
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     read_at DATETIME,
@@ -99,11 +107,11 @@ CREATE TABLE IF NOT EXISTS Notification (
 -- 8. BẢNG NGUYÊN LIỆU KHO (Ingredient) - R06
 CREATE TABLE IF NOT EXISTS Ingredient (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    unit TEXT NOT NULL,            -- Lít, Kg, Bìa, Gói
+    name TEXT UNIQUE NOT NULL,
+    unit TEXT NOT NULL,            -- Lít, Kg, Bìa, Chiếc
     stock_qty REAL NOT NULL DEFAULT 0,
     min_threshold REAL NOT NULL DEFAULT 0,
-    low_alerted INTEGER DEFAULT 0  -- 1 nếu đã cảnh báo để tránh lặp (R06)
+    low_alerted INTEGER NOT NULL DEFAULT 0 CHECK(low_alerted IN (0, 1)) -- 1 nếu đã cảnh báo tránh lặp (R06)
 );
 
 -- 9. BẢNG ĐỊNH LƯỢNG MÓN (BomLine) - R05
@@ -111,7 +119,8 @@ CREATE TABLE IF NOT EXISTS BomLine (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     menu_item_id INTEGER NOT NULL,
     ingredient_id INTEGER NOT NULL,
-    qty_per_serving REAL NOT NULL,
+    qty_per_serving REAL NOT NULL CHECK(qty_per_serving > 0),
+    UNIQUE(menu_item_id, ingredient_id), -- Một nguyên liệu không trùng 2 lần trong cùng công thức
     FOREIGN KEY (menu_item_id) REFERENCES MenuItem(id) ON DELETE CASCADE,
     FOREIGN KEY (ingredient_id) REFERENCES Ingredient(id) ON DELETE CASCADE
 );
@@ -136,24 +145,33 @@ CREATE TABLE IF NOT EXISTS Stocktake (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     date DATETIME DEFAULT CURRENT_TIMESTAMP,
     by_user_id INTEGER,
-    synced INTEGER DEFAULT 0,      -- 1 nếu đã đồng bộ chênh lệch vào tồn kho
+    synced INTEGER NOT NULL DEFAULT 0 CHECK(synced IN (0, 1)), -- 1 nếu đã đồng bộ tồn kho
     FOREIGN KEY (by_user_id) REFERENCES "User"(id)
 );
 
--- 12. BẢNG CHI TIẾT KIỂM KÊ (StocktakeLine)
+-- 12. BẢNG CHI TIẾT KIỂM KÊ (StocktakeLine) - diff tính động qua view hoặc query
 CREATE TABLE IF NOT EXISTS StocktakeLine (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     stocktake_id INTEGER NOT NULL,
     ingredient_id INTEGER NOT NULL,
     system_qty REAL NOT NULL,
     counted_qty REAL NOT NULL,
-    diff REAL NOT NULL,
+    UNIQUE(stocktake_id, ingredient_id),
     FOREIGN KEY (stocktake_id) REFERENCES Stocktake(id) ON DELETE CASCADE,
     FOREIGN KEY (ingredient_id) REFERENCES Ingredient(id)
 );
 
 -- ==============================================================================
--- TIỆN ÍCH VIEW: Hỗ trợ cú pháp chữ thường snake_case
+-- CHỈ MỤC TỐI ƯU TRUY VẤN (INDEXES - Phần VI, mục 4)
+-- ==============================================================================
+CREATE INDEX IF NOT EXISTS idx_order_item_station_status_created
+    ON OrderItem(station_id, status, created_at);
+
+CREATE INDEX IF NOT EXISTS idx_notification_target
+    ON Notification(target_role, target_station_id, id);
+
+-- ==============================================================================
+-- TIỆN ÍCH VIEW: Hỗ trợ cú pháp chữ thường snake_case & trường tính toán diff
 -- ==============================================================================
 CREATE VIEW IF NOT EXISTS users AS SELECT * FROM "User";
 CREATE VIEW IF NOT EXISTS stations AS SELECT * FROM Station;
@@ -166,7 +184,10 @@ CREATE VIEW IF NOT EXISTS ingredients AS SELECT * FROM Ingredient;
 CREATE VIEW IF NOT EXISTS bom_lines AS SELECT * FROM BomLine;
 CREATE VIEW IF NOT EXISTS stock_movements AS SELECT * FROM StockMovement;
 CREATE VIEW IF NOT EXISTS stocktakes AS SELECT * FROM Stocktake;
-CREATE VIEW IF NOT EXISTS stocktake_lines AS SELECT * FROM StocktakeLine;
+CREATE VIEW IF NOT EXISTS stocktake_lines AS
+    SELECT id, stocktake_id, ingredient_id, system_qty, counted_qty,
+           (counted_qty - system_qty) AS diff
+    FROM StocktakeLine;
 
 -- ==============================================================================
 -- DỮ LIỆU KHỞI TẠO MẪU (SEED DATA - PB-03)
@@ -179,16 +200,15 @@ INSERT OR IGNORE INTO Station (id, name, description) VALUES
 ('ST03', 'Quầy Bia & Món Lạnh', 'Bia hơi Hà Nội keg, lạc luộc gia truyền, nem chua Thanh Hóa, dưa chuột chẻ'),
 ('ST04', 'Trạm Chiên & Khai Vị', 'Đậu phụ lướt ván giòn, khoai tây chiên bơ tỏi, ngô chiên bơ cay');
 
--- 2. Tài khoản nhân sự mẫu (Mật khẩu mặc định: 123456)
--- password_hash là bcrypt hash của "123456" ($2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4L5.vIqf.S)
+-- 2. Tài khoản nhân sự mẫu (Mật khẩu mặc định đã xác thực bcrypt: "123456")
 INSERT OR IGNORE INTO "User" (username, password_hash, full_name, role, station_id, active) VALUES
-('bep_truong', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4L5.vIqf.S', 'Nguyễn Văn Hùng (Bếp Trưởng)', 'head_chef', NULL, 1),
-('bep_nuong', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4L5.vIqf.S', 'Trần Đình Trọng (Đầu Bếp Nướng)', 'line_cook', 'ST01', 1),
-('bep_xao', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4L5.vIqf.S', 'Lê Văn Nam (Đầu Bếp Xào)', 'line_cook', 'ST02', 1),
-('bep_bia', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4L5.vIqf.S', 'Hoàng Minh Đức (Quầy Bia)', 'line_cook', 'ST03', 1),
-('bep_chien', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4L5.vIqf.S', 'Vũ Quốc Anh (Đầu Bếp Chiên)', 'line_cook', 'ST04', 1),
-('waiter_01', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4L5.vIqf.S', 'Phạm Minh Tuấn (Phục Vụ)', 'waiter', NULL, 1),
-('waiter_02', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4L5.vIqf.S', 'Đỗ Thúy Hằng (Phục Vụ)', 'waiter', NULL, 1);
+('bep_truong', '$2b$12$MeGOyFbI.ClRQaDfQ/blAulXYVhufjq8ofLcQnLk3KtQcIlcWRmzK', 'Nguyễn Văn Hùng (Bếp Trưởng)', 'head_chef', NULL, 1),
+('bep_nuong',  '$2b$12$MeGOyFbI.ClRQaDfQ/blAulXYVhufjq8ofLcQnLk3KtQcIlcWRmzK', 'Trần Đình Trọng (Đầu Bếp Nướng)', 'line_cook', 'ST01', 1),
+('bep_xao',    '$2b$12$MeGOyFbI.ClRQaDfQ/blAulXYVhufjq8ofLcQnLk3KtQcIlcWRmzK', 'Lê Văn Nam (Đầu Bếp Xào)', 'line_cook', 'ST02', 1),
+('bep_bia',    '$2b$12$MeGOyFbI.ClRQaDfQ/blAulXYVhufjq8ofLcQnLk3KtQcIlcWRmzK', 'Hoàng Minh Đức (Quầy Bia)', 'line_cook', 'ST03', 1),
+('bep_chien',  '$2b$12$MeGOyFbI.ClRQaDfQ/blAulXYVhufjq8ofLcQnLk3KtQcIlcWRmzK', 'Vũ Quốc Anh (Đầu Bếp Chiên)', 'line_cook', 'ST04', 1),
+('waiter_01',  '$2b$12$MeGOyFbI.ClRQaDfQ/blAulXYVhufjq8ofLcQnLk3KtQcIlcWRmzK', 'Phạm Minh Tuấn (Phục Vụ)', 'waiter', NULL, 1),
+('waiter_02',  '$2b$12$MeGOyFbI.ClRQaDfQ/blAulXYVhufjq8ofLcQnLk3KtQcIlcWRmzK', 'Đỗ Thúy Hằng (Phục Vụ)', 'waiter', NULL, 1);
 
 -- 3. Danh mục món ăn
 INSERT OR IGNORE INTO MenuItem (id, name, default_station_id, price, is_sold_out, active) VALUES
@@ -215,7 +235,7 @@ INSERT OR IGNORE INTO Ingredient (id, name, unit, stock_qty, min_threshold, low_
 (7, 'Khoai tây củ', 'Kg', 20.0, 4.0, 0),
 (8, 'Nem chua cây', 'Chiếc', 50.0, 10.0, 0);
 
--- 5. Định mức nguyên liệu (BOM)
+-- 5. Định mức nguyên liệu (BOM) - chống trùng nhờ UNIQUE(menu_item_id, ingredient_id)
 INSERT OR IGNORE INTO BomLine (menu_item_id, ingredient_id, qty_per_serving) VALUES
 (1, 1, 2.0),    -- Ca 2L bia tiêu hao 2 lít
 (2, 1, 0.33),   -- Cốc 330ml tiêu hao 0.33 lít
@@ -226,4 +246,3 @@ INSERT OR IGNORE INTO BomLine (menu_item_id, ingredient_id, qty_per_serving) VAL
 (7, 4, 0.5),    -- Đĩa chân gà nướng tiêu hao 0.5 kg chân gà
 (9, 2, 0.25),   -- Đĩa bò xào tiêu hao 0.25 kg bò
 (10, 5, 0.3);   -- Đĩa mực xào tiêu hao 0.3 kg mực
-

@@ -87,6 +87,20 @@ def get_stations(db: sqlite3.Connection = Depends(get_db)):
     return [{"id": r["id"], "name": r["name"], "description": r["description"]} for r in rows]
 
 
+# Danh sách bàn nạp sẵn dạng cấu hình tĩnh theo giả định A6 (PB-03)
+SEED_TABLES = (
+    [{"table_no": f"Bàn {i:02d}", "area": "Tầng 1 - Sảnh chính"} for i in range(1, 11)]
+    + [{"table_no": f"Bàn {i:02d}", "area": "Tầng 2 - Ngoài trời"} for i in range(11, 16)]
+    + [{"table_no": "Bàn VIP 1", "area": "Phòng VIP"}, {"table_no": "Bàn VIP 2", "area": "Phòng VIP"}]
+)
+
+
+@app.get("/api/tables")
+def get_tables():
+    """Lấy danh sách bàn ăn nạp sẵn theo giả định A6 (PB-03)."""
+    return SEED_TABLES
+
+
 @app.get("/api/menu-items")
 def get_menu_items(db: sqlite3.Connection = Depends(get_db)):
     """Lấy danh sách món ăn mẫu (PB-03)."""

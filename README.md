@@ -93,8 +93,9 @@ git checkout -b feature/pb-04-notification
 
 - **Nếu bạn làm Backend (PB-04,...)**:
 
-  - Viết các đường dẫn API trong thư mục `backend/` (chủ yếu là viết trong file `backend/main.py` hoặc tách ra thành các file trong thư mục con nếu cần).
-  - Khi cần đọc/ghi dữ liệu, sử dụng kết nối CSDL SQLite đã cấu hình sẵn trong `database.py`.
+  - Viết các đường dẫn API trong thư mục `backend/` (có thể viết trong `backend/main.py` hoặc tách thành các module theo đúng tên lớp BCE trong tài liệu thiết kế như `auth_controller.py`, `order_controller.py`, `station_routing_service.py`, `kitchen_controller.py`, `notification_service.py`, `order_item.py`...).
+  - Khi cần đọc/ghi dữ liệu, sử dụng kết nối CSDL SQLite đã cấu hình sẵn trong `database.py` (đã bật WAL mode và foreign keys). Lưu ý đặt tên bảng trùng từ khóa SQL (`"User"`, `"Order"`) trong dấu nháy kép.
+  - Viết unit test bằng `pytest` (đặc biệt cho máy trạng thái `PB-14` và so khớp diff `PB-26`).
 - **Nếu bạn làm Frontend (PB-05,...)**:
 
   - Bạn phụ trách Frontend sẽ tạo và viết các file `.jsx` chứa giao diện các thành phần màn hình trong thư mục `frontend/src/components/`, rồi gọi hiển thị trong `App.jsx` để ghép các thành phần đó lại.
