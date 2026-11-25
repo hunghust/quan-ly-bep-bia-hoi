@@ -16,6 +16,9 @@ Hệ thống hỗ trợ nhà hàng bia hơi vận hành khu vực bếp theo th�
 - Đầu bếp từng trạm (Line Cook) xem vé món theo thứ tự FIFO, cập nhật trạng thái làm món và cảnh báo trễ giờ nấu (> 10 phút).
 - Tự động trừ kho nguyên liệu theo định lượng món ăn (BOM) ngay khi món hoàn thành ("ready") và cảnh báo kịp thời khi nguyên liệu chạm ngưỡng an toàn.
 
+> 📖 **Tài liệu Phân tích & Thiết kế Hệ thống (Use Case, Quy tắc R01–R11, Sơ đồ lớp, Trạng thái, Tuần tự, ERD & Danh sách màn hình):**  
+> 👉 Xem trực tiếp tại: [**docs/Phân tích thiết kế hệ thống bếp bia hơi.md**](./docs/Ph%C3%A2n%20t%C3%ADch%20thi%E1%BA%BFt%20k%E1%BA%BF%20h%E1%BB%87%20th%E1%BB%91ng%20b%E1%BA%BFp%20bia%20h%C6%A1i.md)
+
 ---
 
 ## 🛠️ 2. Ngăn Xếp Công Nghệ (Tech Stack)
@@ -246,6 +249,8 @@ Hệ thống đã nạp sẵn dữ liệu mẫu trong `backend/init_db.sql`:
 quan-ly-bep-bia-hoi/
 ├── .gitignore              # Bỏ qua node_modules, venv, file CSDL .db, cache...
 ├── README.md               # Tài liệu hướng dẫn & quy chuẩn nhóm
+├── docs/
+│   └── Phân tích thiết kế hệ thống bếp bia hơi.md  # Tài liệu OOAD/UML chuẩn (Use Case, ERD, BCE, Sơ đồ)
 ├── backend/
 │   ├── database.py         # Kết nối SQLite, cấu hình WAL Mode, hàm init_db()
 │   ├── init_db.sql         # Kịch bản DDL 12 bảng & nạp dữ liệu mẫu ban đầu
